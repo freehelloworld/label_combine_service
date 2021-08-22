@@ -7,8 +7,8 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-source_path = os.getenv("SOURCE_PATH") if os.getenv("SOURCE_PATH") else '/Users/peter/Downloads/New_Data/'
-output_path = os.getenv("OUTPUT_PATH") if os.getenv("OUTPUT_PATH") else '/Users/peter/Downloads/New_Data/'
+source_path = os.getenv("SOURCE_PATH") if os.getenv("SOURCE_PATH") else '/Users/whoever/Downloads/New_Data/'
+output_path = os.getenv("OUTPUT_PATH") if os.getenv("OUTPUT_PATH") else '/Users/whoever/Downloads/New_Data/'
 
 
 @app.route('/combine/<string:loc_id>', methods=["GET"])
