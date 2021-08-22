@@ -1,24 +1,24 @@
 import numpy as np
 import h5py
 import tarfile
-import os
 from collections import Counter
 
 
 class Combiner:
 
-    def __init__(self, source_path, output_path, loc_id):
+    def __init__(self, storage_helper, loc_id):
+        self.storage_helper = storage_helper
+        self.tar_files = self.storage_helper.get_tar_files(loc_id)
         self.loc_id = loc_id
-        self.output_path = output_path
-        file_path = os.path.join(source_path, loc_id)
-        self.tar_files = self._get_files(file_path)
-
-    def _get_files(self, file_path):
-        tar_files = [os.path.join(file_path, f)
-                     for f in os.listdir(file_path) if 'tar' in f]
-        return tar_files
 
     def _read_label_data(self):
+        """ Read all tar.gz files and save all label data in a dictionary
+
+        Returns:
+            label_dict: a dictionary, key is the class key,
+                        and value is a list of all label data from multiple tar.gz files.
+                        for typical 896*896 case, value is a list of nparrays with shape of (896,896)
+        """
         label_dict = {}
 
         for tar_file in self.tar_files:
@@ -40,18 +40,17 @@ class Combiner:
 
     @staticmethod
     def _get_most_common(lst):
+        """
+        Given a list, find the value that occurs the most.
+        """
         data = Counter(lst)
         return data.most_common(1)[0][0]
 
-    @staticmethod
-    def _save_h5(result_dict, output_path):
-
-        hf_result = h5py.File(output_path, 'w')
-        for k, v in result_dict.items():
-            hf_result.create_dataset(k, data=v)
-        hf_result.close()
-
     def combine(self):
+        """ Combine label data from multiple label files.
+        For each pixel, select the majority as the final value. for example:
+        labels of 5 jobs for pixel [0,0] are [-1,1,0,1,1], the final label for [0,0] is 1.
+        """
         label_dict = self._read_label_data()
         result_dict = {}
         for k, v in label_dict.items():
@@ -66,6 +65,5 @@ class Combiner:
                     fixed_result[i, j] = local_max
             result_dict[k] = fixed_result
 
-        output_path = os.path.join(self.output_path, '{0}_combined.h5'.format(self.loc_id))
-        self._save_h5(result_dict, output_path)
+        output_path = self.storage_helper.save_h5_file(result_dict, self.loc_id)
         return output_path

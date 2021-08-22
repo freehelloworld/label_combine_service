@@ -13,9 +13,9 @@ output_path = os.getenv("OUTPUT_PATH") if os.getenv("OUTPUT_PATH") else '/Users/
 
 @app.route('/combine/<string:loc_id>', methods=["GET"])
 def combine_by_id(loc_id):
-    print(loc_id)
-    combiner = Combiner(source_path, output_path, loc_id)
-    return combiner.combine()
+    helper = StorageHelper(source_path, output_path)
+    combiner = Combiner(helper, loc_id)
+    return combiner.combine(), 200
 
 
 @app.route('/combine/all', methods=["GET"])
@@ -23,11 +23,13 @@ def combine_all():
     manifest = os.path.join(source_path, 'attribute_manifest.csv')
     df = pd.read_csv(manifest)
     loc_ids = list(set(df['loc_id'].values))
+    helper = StorageHelper(source_path, output_path)
+
     for loc_id in loc_ids:
         print(loc_id)
-        combiner = Combiner(source_path, output_path, str(loc_id))
+        combiner = Combiner(helper, str(loc_id))
         combiner.combine()
-    return 'Done'
+    return 'Done', 200
 
 
 @app.route('/combine/new/<string:action_date>', methods=["GET"])
@@ -43,12 +45,13 @@ def combine_new(action_date):
     df = df[df['date'] >= action_date]
     loc_ids = list(set(df['loc_id'].values))
     cnt = 0
+    helper = StorageHelper(source_path, output_path)
     for loc_id in loc_ids:
         print(cnt, loc_id)
-        combiner = Combiner(source_path, output_path, str(loc_id))
+        combiner = Combiner(helper, str(loc_id))
         combiner.combine()
         cnt += 1
-    return 'Done'
+    return 'Done', 200
 
 
 if __name__ == "__main__":
