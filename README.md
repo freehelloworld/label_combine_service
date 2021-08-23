@@ -3,9 +3,11 @@ Combine all jobs that were done on the same image and generate a final label.
 
 ## Overview
 Solution is delivered as a microservice in term of API. Three API endpoints are exposed to cater the requirement for both historical jobs and new jobs.
-1. /combine/<loc_id>, combines jobs for a given location id.
-2. /combine/all, combines jobs for all locations.
-3. /combine/new/<date>, combines jobs for locations that have been updated after given date.
+1. `/combine/<loc_id>`, combines jobs for a given location id.
+2. `/combine/all`, combines jobs for all locations.
+3. `/combine/new/<date>`, combines jobs for locations that have been updated after given date.
+
+Combined labels for a location is saved to output_path with name `{loc_id}_combined.h5`.
 
 `attribute_manifest.csv` is used as the source of truth, from which new jobs or all jobs are calculated.
 Note that endpoint 2 and 3 combine jobs sequentially. To finish endpoint 2 for given dataset (1134 locations) could take a long time. 
@@ -14,11 +16,11 @@ The best way to combine jobs for all locations is to call /combine/<loc_id> in p
 
 ## Implementation detail
 ### Key methods
-Combiner._read_label_data, it reads label data of a location, stores the data in a dictionary and returns a dictionary. For example location 4289, it has 11 jobs for both class 2 and 3, so the returned dictionary has two keys, and each corresponding value is a list with 11 elements, each of which is a nparray with shape (896,896).
+`Combiner._read_label_data`, it reads label data of a location, stores the data in a dictionary and returns a dictionary. For example location 4289, it has 11 jobs for both class 2 and 3, so the returned dictionary has two keys, and each corresponding value is a list with 11 elements, each of which is a nparray with shape (896,896).
 
-Combiner.combine, it combines labels of all jobs and take the majority as the final label. Take location 4289, class 2 as example, the labels of 11 jobs are in a list of nparrays, which firstly are stacked into a 3 dimensional nparray, with shape(896,896,11). Then the inner most dimension is an array of 11 labels, so we are able to apply a function to pick the most common value.
+`Combiner.combine`, it combines labels of all jobs and take the majority as the final label. Take location 4289, class 2 as example, the labels of 11 jobs are in a list of nparrays, which firstly are stacked into a 3 dimensional nparray, with shape(896,896,11). Then the inner most dimension is an array of 11 labels, so we are able to apply a function to pick the most common value.
 
-Combiner._get_most_common is a util function that finds the most common value in a given array.
+`Combiner._get_most_common` is a util function that finds the most common value in a given array.
 
  Interaction with storage is implemented in class `StorageHelper`, in which local storage is fully tested, but the s3 part is not tested yet.
 
