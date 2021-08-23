@@ -54,7 +54,11 @@ class Combiner:
         label_dict = self._read_label_data()
         result_dict = {}
         for k, v in label_dict.items():
+            # v is a list of nparrays,
+            # take location 4289, class 2 as an example,
+            # v is a list with 11 elements, each of which is a nparray of shape (896,896)
             stacked_label = np.stack(v, axis=2)
+            # after np.stack over axis 2, stacked_label is a 3D nparray in shape of (896, 896, 11)
             stacked_label = stacked_label.astype(int)
             x = stacked_label.shape[0]
             y = stacked_label.shape[1]
